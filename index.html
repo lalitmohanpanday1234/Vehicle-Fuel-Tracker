@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vehicle Fuel Tracker</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #4a6fa5, #166088);
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        header h1 {
+            margin-bottom: 10px;
+            font-size: 2.2rem;
+        }
+        
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .form-container {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
+            position: relative;
+        }
+        
+        .form-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .form-container h2 {
+            color: #4a6fa5;
+            padding-bottom: 10px;
+        }
+        
+        .import-export {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .import-export button {
+            background: #2ecc71;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .import-export button:hover {
+            background: #27ae60;
+        }
+        
+        .import-export button.export-btn {
+            background: #3498db;
+        }
+        
+        .import-export button.export-btn:hover {
+            background: #2980b9;
+        }
+        
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+        
+        .btn {
+            background: #4a6fa5;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+        
+        .btn:hover {
+            background: #166088;
+        }
+        
+        .history {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+        }
+        
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .history h2 {
+            color: #4a6fa5;
+            padding-bottom: 10px;
+        }
+        
+        .filters {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .filter-group label {
+            font-weight: 600;
+            color: #555;
+            white-space: nowrap;
+        }
+        
+        select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        table th, table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        table th {
+            background-color: #f8f9fa;
+            color: #4a6fa5;
+            font-weight: 600;
+        }
+        
+        table tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .delete-btn {
+            color: #e74c3c;
+            cursor: pointer;
+            font-size: 1.1rem;
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 30px;
+            color: #777;
+        }
+        
+        .totals-row {
+            background-color: #f0f7ff;
+            font-weight: bold;
+        }
+        
+        .totals-row td {
+            border-top: 2px solid #4a6fa5;
+            border-bottom: none;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #777;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                flex-direction: column;
+            }
+            
+            .form-header, .history-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .filters {
+                width: 100%;
+            }
+            
+            table {
+                display: block;
+                overflow-x: auto;
+            }
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 5px;
+            color: white;
+            font-weight: 600;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .notification.success {
+            background-color: #2ecc71;
+        }
+        
+        .notification.error {
+            background-color: #e74c3c;
+        }
+        
+        .notification.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-car"></i> Vehicle Fuel Tracker</h1>
+            <p>Track your vehicle's fuel efficiency and expenses easily</p>
+        </header>
+        
+        <div class="form-container">
+            <div class="form-header">
+                <h2><i class="fas fa-gas-pump"></i> Add Fuel Entry</h2>
+                <div class="import-export">
+                    <button class="import-btn" id="import-btn">
+                        <i class="fas fa-file-import"></i> Import Excel
+                    </button>
+                    <button class="export-btn" id="export-btn">
+                        <i class="fas fa-file-export"></i> Export Excel
+                    </button>
+                </div>
+            </div>
+            <form id="fuel-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="date">Date</label>
+                        <input type="date" id="date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="odometer">Odometer Reading (km)</label>
+                        <input type="number" id="odometer" placeholder="Enter current odometer reading" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="fuel">Fuel Quantity (liters)</label>
+                        <input type="number" id="fuel" step="0.01" placeholder="Enter fuel quantity" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="cost">Cost (₹)</label>
+                        <input type="number" id="cost" step="0.01" placeholder="Enter fuel cost" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn"><i class="fas fa-save"></i> Save Entry</button>
+            </form>
+            <input type="file" id="file-input" class="file-input" accept=".xlsx, .xls">
+        </div>
+        
+        <div class="history">
+            <div class="history-header">
+                <h2><i class="fas fa-history"></i> Fuel History</h2>
+                <div class="filters">
+                    <div class="filter-group">
+                        <label for="week-filter">Week:</label>
+                        <select id="week-filter">
+                            <option value="all">All Weeks</option>
+                            <option value="1">1st Week</option>
+                            <option value="2">2nd Week</option>
+                            <option value="3">3rd Week</option>
+                            <option value="4">4th Week</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="month-filter">Month:</label>
+                        <select id="month-filter">
+                            <option value="all">All Months</option>
+                            <option value="0">January</option>
+                            <option value="1">February</option>
+                            <option value="2">March</option>
+                            <option value="3">April</option>
+                            <option value="4">May</option>
+                            <option value="5">June</option>
+                            <option value="6">July</option>
+                            <option value="7">August</option>
+                            <option value="8">September</option>
+                            <option value="9">October</option>
+                            <option value="10">November</option>
+                            <option value="11">December</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="history-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Odometer (km)</th>
+                            <th>Fuel (L)</th>
+                            <th>Cost (₹)</th>
+                            <th>Distance (km)</th>
+                            <th>Average (km/L)</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-body">
+                        <!-- Data will be populated by JavaScript -->
+                    </tbody>
+                    <tfoot id="history-totals">
+                        <!-- Totals row will be populated by JavaScript -->
+                    </tfoot>
+                </table>
+                <div id="no-data-message" class="no-data">
+                    <p>No fuel entries yet. Add your first entry above!</p>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Vehicle Fuel Tracker &copy; 2023 | Track your vehicle's fuel efficiency with ease</p>
+        </footer>
+    </div>
+
+    <div id="notification" class="notification"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const fuelForm = document.getElementById('fuel-form');
+            const historyBody = document.getElementById('history-body');
+            const historyTotals = document.getElementById('history-totals');
+            const noDataMessage = document.getElementById('no-data-message');
+            const weekFilter = document.getElementById('week-filter');
+            const monthFilter = document.getElementById('month-filter');
+            const importBtn = document.getElementById('import-btn');
+            const exportBtn = document.getElementById('export-btn');
+            const fileInput = document.getElementById('file-input');
+            const notification = document.getElementById('notification');
+            
+            // Load data from localStorage or initialize empty array
+            let fuelData = JSON.parse(localStorage.getItem('fuelData')) || [];
+            
+            // Recalculate all distances and averages on load
+            recalculateAllDistancesAndAverages();
+            
+            // Display existing data
+            renderHistoryTable();
+            
+            // Handle form submission
+            fuelForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const date = document.getElementById('date').value;
+                const odometer = parseFloat(document.getElementById('odometer').value);
+                const fuel = parseFloat(document.getElementById('fuel').value);
+                const cost = parseFloat(document.getElementById('cost').value);
+                
+                // Check if odometer reading already exists
+                const existingEntry = fuelData.find(entry => entry.odometer === odometer);
+                if (existingEntry) {
+                    showNotification('This odometer reading already exists. Please enter a different reading.', 'error');
+                    return;
+                }
+                
+                // Create new entry
+                const newEntry = {
+                    date,
+                    odometer,
+                    fuel,
+                    cost,
+                    distance: 0,
+                    average: 0
+                };
+                
+                // Add to data array
+                fuelData.push(newEntry);
+                
+                // Recalculate all distances and averages
+                recalculateAllDistancesAndAverages();
+                
+                // Save to localStorage
+                localStorage.setItem('fuelData', JSON.stringify(fuelData));
+                
+                // Update UI
+                renderHistoryTable();
+                
+                // Reset form
+                fuelForm.reset();
+                document.getElementById('date').valueAsDate = new Date();
+                
+                showNotification('Fuel entry added successfully!', 'success');
+            });
+            
+            // Set today's date as default
+            document.getElementById('date').valueAsDate = new Date();
+            
+            // Handle filter changes
+            weekFilter.addEventListener('change', renderHistoryTable);
+            monthFilter.addEventListener('change', renderHistoryTable);
+            
+            // Handle import button click
+            importBtn.addEventListener('click', function() {
+                fileInput.click();
+            });
+            
+            // Handle file selection for import
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        
+                        // Get first worksheet
+                        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                        
+                        // Convert to JSON
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+                        
+                        // Validate imported data
+                        if (jsonData.length === 0) {
+                            showNotification('The Excel file is empty.', 'error');
+                            return;
+                        }
+                        
+                        const requiredFields = ['date', 'odometer', 'fuel', 'cost'];
+                        const firstRow = jsonData[0];
+                        const hasRequiredFields = requiredFields.every(field => field in firstRow);
+                        
+                        if (!hasRequiredFields) {
+                            showNotification('The Excel file does not have the required columns: date, odometer, fuel, cost.', 'error');
+                            return;
+                        }
+                        
+                        if (confirm('This will replace your current data. Continue?')) {
+                            // Process imported data
+                            const importedData = jsonData.map(row => ({
+                                date: row.date,
+                                odometer: parseFloat(row.odometer),
+                                fuel: parseFloat(row.fuel),
+                                cost: parseFloat(row.cost),
+                                distance: 0,
+                                average: 0
+                            }));
+                            
+                            fuelData = importedData;
+                            
+                            // Recalculate all distances and averages
+                            recalculateAllDistancesAndAverages();
+                            
+                            localStorage.setItem('fuelData', JSON.stringify(fuelData));
+                            renderHistoryTable();
+                            showNotification('Data imported successfully!', 'success');
+                        }
+                    } catch (error) {
+                        console.error(error);
+                        showNotification('Error reading Excel file. Please make sure it is a valid Excel file.', 'error');
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+                
+                // Reset file input
+                fileInput.value = '';
+            });
+            
+            // Handle export button click
+            exportBtn.addEventListener('click', function() {
+                if (fuelData.length === 0) {
+                    showNotification('No data to export.', 'error');
+                    return;
+                }
+                
+                try {
+                    // Create a copy of data for export
+                    const exportData = fuelData.map(entry => ({
+                        Date: entry.date,
+                        'Odometer (km)': entry.odometer,
+                        'Fuel (L)': entry.fuel,
+                        'Cost (₹)': entry.cost,
+                        'Distance (km)': entry.distance,
+                        'Average (km/L)': entry.average
+                    }));
+                    
+                    // Create worksheet
+                    const worksheet = XLSX.utils.json_to_sheet(exportData);
+                    
+                    // Create workbook
+                    const workbook = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(workbook, worksheet, 'Fuel Data');
+                    
+                    // Export to Excel file
+                    XLSX.writeFile(workbook, 'vehicle-fuel-data.xlsx');
+                    showNotification('Data exported successfully!', 'success');
+                } catch (error) {
+                    console.error(error);
+                    showNotification('Error exporting data.', 'error');
+                }
+            });
+            
+            // Recalculate all distances and averages for all entries
+            function recalculateAllDistancesAndAverages() {
+                if (fuelData.length === 0) return;
+                
+                // Sort by odometer to calculate distances correctly
+                const sortedByOdometer = [...fuelData].sort((a, b) => a.odometer - b.odometer);
+                
+                // Recalculate distances and averages
+                for (let i = 0; i < sortedByOdometer.length; i++) {
+                    if (i === 0) {
+                        // First entry has no previous odometer reading
+                        sortedByOdometer[i].distance = 0;
+                        sortedByOdometer[i].average = 0;
+                    } else {
+                        // Calculate distance from previous entry
+                        const distance = sortedByOdometer[i].odometer - sortedByOdometer[i-1].odometer;
+                        sortedByOdometer[i].distance = distance;
+                        
+                        // Calculate average
+                        sortedByOdometer[i].average = sortedByOdometer[i].fuel > 0 ? 
+                            parseFloat((distance / sortedByOdometer[i].fuel).toFixed(2)) : 0;
+                    }
+                }
+                
+                // Update the main data array
+                fuelData = sortedByOdometer;
+            }
+            
+            // Show notification
+            function showNotification(message, type) {
+                notification.textContent = message;
+                notification.className = `notification ${type}`;
+                notification.classList.add('show');
+                
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+            }
+            
+            // Render history table
+            function renderHistoryTable() {
+                const selectedWeek = weekFilter.value;
+                const selectedMonth = monthFilter.value;
+                
+                // Filter data based on selections
+                let filteredData = fuelData.filter(entry => {
+                    const entryDate = new Date(entry.date);
+                    const entryWeek = getWeekOfMonth(entryDate);
+                    const entryMonth = entryDate.getMonth();
+                    
+                    const weekMatch = selectedWeek === 'all' || entryWeek.toString() === selectedWeek;
+                    const monthMatch = selectedMonth === 'all' || entryMonth.toString() === selectedMonth;
+                    
+                    return weekMatch && monthMatch;
+                });
+                
+                // Sort by date (newest first) for display
+                filteredData.sort((a, b) => new Date(b.date) - new Date(a.date));
+                
+                if (filteredData.length === 0) {
+                    historyBody.innerHTML = '';
+                    historyTotals.innerHTML = '';
+                    noDataMessage.style.display = 'block';
+                    return;
+                }
+                
+                noDataMessage.style.display = 'none';
+                
+                // Generate table rows
+                historyBody.innerHTML = filteredData.map((entry) => `
+                    <tr>
+                        <td>${formatDate(entry.date)}</td>
+                        <td>${entry.odometer}</td>
+                        <td>${entry.fuel}</td>
+                        <td>${entry.cost}</td>
+                        <td>${entry.distance > 0 ? entry.distance.toFixed(2) : '--'}</td>
+                        <td>${entry.average > 0 ? entry.average.toFixed(2) : '--'}</td>
+                        <td><i class="fas fa-trash delete-btn" data-id="${entry.date}-${entry.odometer}"></i></td>
+                    </tr>
+                `).join('');
+                
+                // Calculate totals for filtered data
+                const totalDistance = filteredData.reduce((sum, entry) => sum + entry.distance, 0);
+                const totalFuel = filteredData.reduce((sum, entry) => sum + entry.fuel, 0);
+                const totalCost = filteredData.reduce((sum, entry) => sum + entry.cost, 0);
+                const overallAverage = totalFuel > 0 ? totalDistance / totalFuel : 0;
+                
+                // Get the latest odometer reading from filtered data
+                const latestOdometer = filteredData.length > 0 ? 
+                    Math.max(...filteredData.map(entry => entry.odometer)) : 0;
+                
+                // Add totals row
+                historyTotals.innerHTML = `
+                    <tr class="totals-row">
+                        <td><strong>Total</strong></td>
+                        <td>${latestOdometer}</td>
+                        <td>${totalFuel.toFixed(2)}</td>
+                        <td>${totalCost.toFixed(2)}</td>
+                        <td>${totalDistance.toFixed(2)}</td>
+                        <td>${overallAverage.toFixed(2)}</td>
+                        <td></td>
+                    </tr>
+                `;
+                
+                // Add event listeners to delete buttons
+                document.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const entryId = this.getAttribute('data-id');
+                        if (confirm('Are you sure you want to delete this entry?')) {
+                            // Find and remove the entry
+                            fuelData = fuelData.filter(entry => `${entry.date}-${entry.odometer}` !== entryId);
+                            
+                            // Recalculate all distances and averages
+                            recalculateAllDistancesAndAverages();
+                            
+                            localStorage.setItem('fuelData', JSON.stringify(fuelData));
+                            renderHistoryTable();
+                            showNotification('Entry deleted successfully!', 'success');
+                        }
+                    });
+                });
+            }
+            
+            // Get week of month (1-4 or 5)
+            function getWeekOfMonth(date) {
+                const start = new Date(date.getFullYear(), date.getMonth(), 1);
+                const dayOfWeek = start.getDay();
+                const adjustedDate = date.getDate() + dayOfWeek - 1;
+                return Math.ceil(adjustedDate / 7);
+            }
+            
+            // Format date for display
+            function formatDate(dateString) {
+                const options = { year: 'numeric', month: 'short', day: 'numeric' };
+                return new Date(dateString).toLocaleDateString('en-IN', options);
+            }
+        });
+    </script>
+</body>
+</html>
